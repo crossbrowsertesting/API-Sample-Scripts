@@ -1,2 +1,6 @@
 # API-Sample-Scripts
-This script demonstrates how to use our Screenshots API v3 to run a screenshot test on multiple URLs
+## These are sample scripts for using the CrossBrowserTesting API
+
+Available scripts:
+- run a screenshot test on multiple URLs
+- take a screenshot of a livetest using Mobile Firefox
