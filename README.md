@@ -2,5 +2,6 @@
 ## These are sample scripts for using the CrossBrowserTesting API
 
 Available scripts:
-- run a screenshot test on multiple URLs
-- take a screenshot of a livetest using Mobile Firefox
+- API V3 is the current version
+- Live Tests: javascript, python, and php scripts
+- Screenshots: javascript, python, and php scripts
