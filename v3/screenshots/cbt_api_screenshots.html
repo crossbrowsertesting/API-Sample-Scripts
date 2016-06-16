@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>API v3 Run Screenshot Tests Demo : CrossBrowsertesting.com </title>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+/*
+This example is meant to be loaded in a browser, either locally on your machine, or from your webserver.
+*/
+
+//authentication
+var username = "", //email address for your account
+	password = ""; //authkey for your account
+
+function ScreenshotTestApi(username, password) {
+
+	this.basicAuth = btoa(unescape(encodeURIComponent(username + ":" + password)));
+
+	this.baseUrl = "https://crossbrowsertesting.com/api/v3/screenshots";
+
+	this.currentTest = null;
+	this.allBrowsers = [];
+
+	this.callApi =  function(url, method, params, callback){
+
+		var self = this;
+
+		$.ajax({
+			type: method,
+			url: url,
+			data: params,
+			dataType: "json",
+			async: false,
+			beforeSend: function (jqXHR){ 
+		        jqXHR.setRequestHeader('Authorization', "Basic " + self.basicAuth); 
+		    },
+			success: function(data) {
+				callback(data);
+			},
+			error: function(jqXHR, textStatus, errorThrown){
+				//console.log(jqXHR);
+				//console.log(textStatus);
+				//console.log(errorThrown);
+
+				resultsUi.append("<div>" + textStatus + "</div>");
+				throw "Failed: " + textStatus
+			}
+		});	
+
+	}
+
+	this.startNewTest = function(params, callback){
+		var self = this;
+		self.callApi(this.baseUrl, "POST", params, function(data){
+			self.log('new test started successfully', data)
+			self.currentTest = data;
+			resultsUi.append("<div>startNewTest completed</div>");
+			callback();
+		});
+	}
+
+	this.getTestId = function(){
+		return this.currentTest.screenshot_test_id;
+	}
+
+	this.getScreenshotBrowsers = function(){
+		var self = this;
+		url = self.baseUrl + "/browsers";
+		self.callApi(url, "GET", {}, function(data){
+			self.log('callback in getScreenshotBrowsers', data)
+			self.allBrowsers = data;
+		})
+
+		return self.allBrowsers;
+	}
+
+	this.log = function(text){
+		if (window.console) console.log(text);
+	}
+
+}
+
+function runNewTest(){
+
+	var screenshot = new ScreenshotTestApi(username,password);
+
+	var params = {
+		url: $("input[name=url]").val(),
+		browsers: $("select[name=browsers]").val(),
+		api_timeout: $("input[name=api_timeout]").val()
+	}
+
+	resultsUi.html("<div>Running Screenshot Test on " + params.url + "</div>");
+
+	$("#setup").hide();
+
+	screenshot.startNewTest(params, function(){
+		resultsUi.append("<div>Screenshot Test id is " + screenshot.getTestId() + "</div>");
+		resultsUi.append("<div>View Screenshot Test on web here: <a href='https://app.crossbrowsertesting.com/screenshots/" + screenshot.getTestId() + "' target='_blank'>https://app.crossbrowsertesting.com/screenshots/" + screenshot.getTestId() + "</a></div>");
+		resultsUi.append("<br><br><button type='button' onclick='location.href=location.href'>Start Over</button>");
+		
+	})
+}
+
+var resultsUi = null;
+$(document).ready(function(){
+
+	var api = new ScreenshotTestApi(username,password),
+		oss = api.getScreenshotBrowsers();
+	
+	
+	resultsUi = $("#results");
+
+	for (var i=0;i<oss.length;i++){
+		
+		var optGroupId = oss[i].api_name.replace(/\./g,"_");
+		
+		//add optgroup for OS
+		var optGroup = '<optgroup id="' + optGroupId + '" label="' + oss[i].api_name + '"></optgroup>';
+		$("select[name=browsers]").append(optGroup);
+		
+		//add options for browsers
+		var browsers = oss[i].browsers;
+		for (var j=0;j<browsers.length;j++){
+			var option = '<option value="' + oss[i].api_name + '|' + browsers[j].api_name+'">' + browsers[j].name + '</option>';
+			$("select[name=browsers] optgroup#" + optGroupId).append(option);
+		}
+
+		//select IE10 by default
+		$("select[name=browsers]").val("Win8|IE10");
+	}
+	
+});
+
+</script>
+</head>
+
+<body>
+
+<h1>CrossBrowserTesting.com API v3 Run Live Test Demo</h1>
+
+<div id="setup">
+	<h3>Parameters</h3>
+	URL: <input type="text" id="url" name="url" style="width:400px" value="http://www.google.com"><br>
+	Browsers: <br><select multiple id="browsers" name="browsers" style="width:500px;height:200px"></select><br>
+	<br>
+	<button onclick="runNewTest()">Run Screenshot Test</button>
+</div>
+
+<div id="results"></div>
+
+</body>
+</html>
