@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>API v3 Run Live Tests Demo : CrossBrowsertesting.com </title>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+/*
+This example is meant to be loaded in a browser, either locally on your machine, or from your webserver.
+*/
+
+//authentication
+var username = "", //email address for your account
+	password = ""; //authkey for your account
+
+function LiveTest(username, password) {
+
+	this.basicAuth = btoa(unescape(encodeURIComponent(username + ":" + password)));
+
+	this.baseUrl = "https://crossbrowsertesting.com/api/v3/livetests";
+
+	this.currentTest = null;
+	this.currentSnapshot = null;
+	this.currentVideo = null;
+	this.currentNetwork = null;
+	this.browsers = [];
+	this.lastCall = {
+		success: true,
+		message: null
+	};
+
+	this.callApi =  function(url, method, params){
+
+		var self = this;
+		self.lastCall = {
+			success: true,
+			message: null
+		};
+
+		$.ajax({
+			type: method,
+			url: url,
+			data: params,
+			dataType: "json",
+			async: false,
+			beforeSend: function (jqXHR){ 
+		        jqXHR.setRequestHeader('Authorization', "Basic " + self.basicAuth); 
+		    },
+			success: function(data) {
+				if (data.live_test_id){
+					self.currentTest = data;
+				}
+				else if (url.indexOf('snapshots') >  -1){
+					self.currentSnapshot = data;
+				}
+				else if (url.indexOf('videos') >  -1){
+					self.currentVideo = data;
+				}
+				else if (url.indexOf('networks') >  -1){
+					self.currentNetwork = data;
+				}
+				else if (url.indexOf('browsers') >  -1){
+					self.browsers = data;
+				}
+
+				self.lastCall.success = true;
+			},
+			error: function(jqXHR, textStatus, errorThrown){
+				//console.log(jqXHR);
+				//console.log(textStatus);
+				//console.log(errorThrown);
+
+				self.lastCall.success = false;
+				self.lastCall.message = jqXHR.responseText;
+				resultsUi.append("<div>" + self.lastCall.message + "</div>");
+				throw "Failed: " + self.lastCall.message
+			}
+		});	
+
+	}
+
+	this.getBrowsers = function(){
+		if (this.browsers.length == 0){
+			this.callApi(this.baseUrl + "/browsers", "GET", {});
+		}
+		return this.browsers;
+	}
+
+	this.startTest = function(params, callback){
+		this.callApi(this.baseUrl, "POST", params);
+		if (this.lastCall.success){
+			resultsUi.append("<div>startTest completed</div>");
+			this.waitUntilRunning(callback);
+		}
+	}
+
+	this.getLiveTestInfo = function(){
+		url = this.baseUrl + "/" + this.currentTest.live_test_id;
+		this.callApi(url, "GET", {})
+	}
+
+	this.stopTest = function(){
+		url = this.baseUrl + "/" + this.currentTest.live_test_id;
+		this.callApi(url, "DELETE", {});
+	}
+
+	this.waitUntilRunning = function(callback){
+		var self = this, tries = 0,maxTries = 30;
+
+		resultsUi.append("<div>waiting on live test state == running</div>");
+
+		var intervalId = window.setInterval(function () {
+	        self.getLiveTestInfo();
+
+	        if (self.currentTest.state == 'running' || tries >= maxTries){
+				clearInterval(intervalId);
+				callback();
+	        }
+	        
+	        tries++;
+
+	    }, 2000);
+	}
+
+	this.recordVideo = function(){
+		url = this.baseUrl + "/" + this.currentTest.live_test_id + "/videos";
+		this.callApi(url, "POST", {})
+	}
+
+	this.stopVideo = function(){
+		url = this.baseUrl + "/" + this.currentTest.live_test_id + "/videos/" + this.currentVideo.hash;
+		this.callApi(url, "DELETE", {})
+	}
+
+	this.recordNetwork = function(){
+		url = this.baseUrl + "/" + this.currentTest.live_test_id + "/networks";
+		this.callApi(url, "POST", {})
+	}
+
+	this.stopNetwork = function(){
+		url = this.baseUrl + "/" + this.currentTest.live_test_id + "/networks/" + this.currentNetwork.hash;
+		this.callApi(url, "DELETE", {})
+	}
+
+	this.takeSnapshot = function(){
+		url = this.baseUrl + "/" + this.currentTest.live_test_id + "/snapshots";
+		this.callApi(url, "POST", {})
+	}
+
+	this.waitThen = function(msecs, callback){
+		setTimeout(function(){ callback() }, msecs)
+	}
+
+}
+
+function runNewTest(){
+
+	liveTest = new LiveTest(username,password);
+
+	var params = {
+		url: $("input[name=url]").val(),
+		browser: $("select[name=browser]").val(),
+		api_timeout: $("input[name=api_timeout]").val()
+	}
+
+	resultsUi.html("<div>Running Live Test on " + $("select[name=browser]").val() + " for "+$("input[name=url]").val()+" </div>");
+	resultsUi.append("<div>Live test will stop in " + $("input[name=api_timeout]").val() + " seconds</div>");
+	$("#setup").hide();
+
+	liveTest.startTest(params, function(){
+		if (liveTest.currentTest.state == "running"){
+
+			resultsUi.append("<div>Live Test id is " + liveTest.currentTest.live_test_id + "</div>");
+			resultsUi.append("<div>View Live Test on web here: https://app.crossbrowsertesting.com/livetests/run/" + liveTest.currentTest.live_test_id + "</div>");
+
+			resultsUi.append("<div>starting video...</div>");
+			liveTest.recordVideo();
+
+			resultsUi.append("<div>starting network packet capture...</div>");
+			liveTest.recordNetwork();
+
+			resultsUi.append("<div>waiting a few seconds...</div>");
+
+			liveTest.waitThen(5000, function(){
+				resultsUi.append("<div>taking a snapshot...</div>");
+				liveTest.takeSnapshot();
+
+				resultsUi.append("<div>stopping network packet capture...</div>");
+				liveTest.stopNetwork();
+
+				resultsUi.append("<div>stopping video...</div>");
+				liveTest.stopVideo();
+
+				resultsUi.append("<div>calling stop test</div>");
+				liveTest.stopTest();
+
+				resultsUi.append("<div>View test results here: <a href='" + liveTest.currentTest.show_result_web_url + "' target='_blank'>" + liveTest.currentTest.show_result_web_url + "<a/></div>");
+
+				resultsUi.append("<br><br><button type='button' onclick='location.href=location.href'>Start Over</button>");
+			});
+			
+		}
+		else {
+			resultsUi.append("<div>Failed to start Live Test.  Please refresh and try again.</div>");
+		}
+	})
+}
+
+var resultsUi = null;
+$(document).ready(function(){
+
+	var api = new LiveTest(username,password),
+		oss = api.getBrowsers();
+	
+	resultsUi = $("#results");
+
+	for (var i=0;i<oss.length;i++){
+		
+		var optGroupId = oss[i].api_name.replace(/\./g,"_");
+		
+		//add optgroup for OS
+		var optGroup = '<optgroup id="' + optGroupId + '" label="' + oss[i].api_name + '"></optgroup>';
+		$("select[name=browser]").append(optGroup);
+		
+		//add options for browsers
+		var browsers = oss[i].browsers;
+		for (var j=0;j<browsers.length;j++){
+			var option = '<option value="' + oss[i].api_name + '|' + browsers[j].api_name+'">' + browsers[j].name + '</option>';
+			$("select[name=browser] optgroup#" + optGroupId).append(option);
+		}
+
+		//select IE10 by default
+		$("select[name=browser]").val("Win8|IE10");
+	}
+});
+</script>
+</head>
+
+<body>
+
+<h1>CrossBrowserTesting.com API v3 Run Live Test Demo</h1>
+
+<div id="setup">
+	<h3>Parameters</h3>
+	URL: <input type="text" id="url" name="url" style="width:400px" value="http://www.google.com"><br>
+	Browser: <select id="browser" name="browser" style="width:300px;"></select><br>
+	Timeout: <input type="text" id="api_timeout" name="api_timeout" value="60"> seconds<br>
+	<br>
+	<button onclick="runNewTest()">Run Test</button>
+</div>
+
+<div id="results"></div>
+
+</body>
+</html>
