@@ -45,9 +45,55 @@ class CBT_Comparisons_API:
 			return r.json()
 		else:
 			print('Error making API call')
+	def getScreenshotsURLHistory(self, url, number):
+		apiUrl = self.baseUrl + '?format=json&num=' + str(number) + '&url=' + url
+		response = requests.get(apiUrl, auth=HTTPBasicAuth(self.user, self.auth)).json()
+		
+		params = {}
+		i,j = 0,1
+		screenshots = response['screenshots']
+		while j < len(screenshots):
+			first = Screenshot_Batch(screenshots[i])
+			second = Screenshot_Batch(screenshots[j])
+			i += 1
+			j += 1	
+			if first == second:
+				params['target_screenshot_test_id'] = str(screenshots[i]['screenshot_test_id'])
+				params['target_version_id'] = str(screenshots[i]['versions'][0]['version_id'])
+				params['base_version_id'] = str(screenshots[j]['versions'][0]['version_id'])
+				params['tolerance'] = '30'
+				response = self.compareScreenshotTestVersions(params)
+				if could_find_browser(response):
+					print('batch between version ' + str(i) + ' and ' + str(j))
+					for comparison in response:
+						print('\t' + comparison['target']['comparison']['show_comparisons_public_url'])
+
+
+# need to test screenshot batch equality
+
+class Screenshot_Batch:
+	def __init__(self, api):
+		self.configs = []
+		for version in api['versions']:
+			for result in version['results']:
+				self.configs = self.configs + [(result['os']['name'], result['browser']['name'])]
+	
+	def __str__(self):
+		return str(self.configs)
+
+	def __eq__(self, other):
+		return self.__dict__ == other.__dict__
+
+
+def could_find_browser(response):
+	for comparison in response:
+		if comparison['target']['comparison']['message'] is None:
+			return True
+	return False
+
 
 user = "you@yourdomain.com"
-auth = "yourauthkey"
+auth = "12345"
 api = CBT_Comparisons_API(user, auth)
 
 params = {}
@@ -103,13 +149,55 @@ results. The two versions can be from the same screenshot_test_id or not.
 # for comparison in response:
 # 	print comparison['target']['comparison']['show_comparisons_public_url']
 
-params['number'] = '10'
 
-response = api.getScreenshotHistory(params)
-for screenshot in response['screenshots']:
-	# print(screenshot)
-	print('Screenshot URL + ' + screenshot['url'] + ' Screenshots Test ID: ' + str(screenshot['screenshot_test_id']))
-	for version in screenshot['versions']:
-		print('\tVersion ID: ' + str(version['version_id']))
-		for result in version['results']:
-			print('\tOS: ' + result['os']['name'] + ', Browser: ' + result['browser']['name'] + ', Result ID: ' + str(result['result_id']))
+'''
+Returns a list of Screenshot Tests ran on your account. Results returned are in order of most recent to 
+oldest tests ran. As there can be hundreds of tests, the results are limited by specifying a starting index 
+and count of tests to return indicated in the parameters provided. A record count is included in the "meta" 
+attribute to determine the total number of tests ran.
+'''
+
+# params['number'] = '10'
+# # params['url'] = 'https://www.crossbrowsertesting.com'
+# response = api.getScreenshotHistory(params)
+
+# for screenshot in response['screenshots']:
+# 	# print(screenshot)
+# 	print('Screenshot URL + ' + screenshot['url'] + ' Screenshots Test ID: ' + str(screenshot['screenshot_test_id']))
+# 	for version in screenshot['versions']:
+# 		print('\tVersion ID: ' + str(version['version_id']))
+# 		for result in version['results']:
+# 			print('\tOS: ' + result['os']['name'] + ', Browser: ' + result['browser']['name'] + ', Result ID: ' + str(result['result_id']))
+
+
+'''
+Return a comparison for each screenshot batch to the same URL.
+'''
+
+api.getScreenshotsURLHistory('https://www.crossbrowsertesting.com', 10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
