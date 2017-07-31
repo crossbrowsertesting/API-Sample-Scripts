@@ -153,18 +153,10 @@ function runNewTest(){
 
     //set browsers
     $params["browsers"] = array();
-    $params["browsers"][] = "Win7x64-C2|IE10|1400x1050";
-    $params["browsers"][] = "Mac10.9|Chrome36";
-    $params["browsers"][] = "GalaxyNote3-And44|MblChrome36";
+    $params["browsers"][] = "Win7x64|IE11|1400x1050";
+    $params["browsers"][] = "Mac10.9|chrome-latest";
+    $params["browsers"][] = "Win10|ff-latest";
 
-    //other options
-    //$params["browser_list_name"] = "Popular Browsers";
-    //$params["login"] = "mydomain.com login"; //valid only if you've created a login profile with this name
-    //$params["basic_username"] = "username"; //for basic auth urls only
-    //$params["basic_password"] = "password"; //for basic auth urls only
-    //$params["delay"] = 0; //delay for number of seconds to wait after page is loaded to start capturing screenshots
-
-	//create api object and set auth info
 	$screenshot = new ScreenshotTestApi($username,$password);
 
 	print "starting new screenshot test for " . $params["url"].EOL;

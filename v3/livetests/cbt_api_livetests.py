@@ -18,7 +18,7 @@ password = "" #authkey for your account
 
 #set parameters we want for the live test
 params = {}
-params["browser"] = "IE10"
+params["browser"] = "chrome-latest"
 params["url"] = "http://www.google.com"
 params["api_timeout"] = 100 #number of second to allow test to run
 
@@ -130,7 +130,7 @@ liveTest.recordVideo()
 print "starting network packet capture..."
 liveTest.recordNetwork()
 
-print "waitign a few seconds..."
+print "waiting a few seconds..."
 time.sleep(5)
 
 print "taking a snapshot..."

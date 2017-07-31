@@ -24,6 +24,6 @@ urllib2.install_opener(opener)
 
 with open("urls.txt") as f:
     for line in f:
-        data = '{"browsers": ["Win8.1|Chrome30","Nexus9-And50|MblChrome39"], "url": '+ "\""+ string.strip(line) +"\"" + '}'
+        data = '{"browsers": ["Win8.1|chrome-latest","Win10|ff-latest"], "url": '+ "\""+ string.strip(line) +"\"" + '}'
     req = urllib2.Request(top_level_url, data, {'Content-Type': 'application/json'})
     urllib2.urlopen(req)

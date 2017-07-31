@@ -99,12 +99,10 @@ def runNewTestAndWait():
 
     #set browsers
     params["browsers"] = []
-    #params["browsers"].append("Win7x64-C2|IE10|1400x1050")
-    #params["browsers"].append("Win7x64-C2|IE10|1400x1050")
-    #params["browsers"].append("Win7x64-C2|IE10|1400x1050")
-    #params["browsers"].append("Mac10.9|Chrome36")
-    #params["browsers"].append("GalaxyNote3-And44|MblChrome36")
-    #params["browser_list_name"] = "IEs"
+    #params["browsers"].append("Win7x64|IE10|1400x1050")
+    #params["browsers"].append("Win7x64|chrome-latest|1400x1050")
+    #params["browsers"].append("Win7x64|ff-latest|1400x1050")
+    #params["browsers"].append("Mac10.9|chrome-latest-1")
 
     #other options
     params["browser_list_name"] = "Popular Browsers"
@@ -154,13 +152,11 @@ def runNewTest():
 
     #set browsers
     # params["browsers"] = []
-    # params["browsers"].append("Win8.1|Chrome42|2560x1600")
-    # params["browsers"].append("Win8.1|Chrome42|1920x1080")
-    #params["browsers"].append("Win7x64-C2|IE10|1400x1050")
-    #params["browsers"].append("Win7x64-C2|IE10|1400x1050")
-    #params["browsers"].append("Mac10.9|Chrome36")
-    #params["browsers"].append("GalaxyNote3-And44|MblChrome36")
-    #params["browser_list_name"] = "IEs"
+    # params["browsers"].append("Win8.1|chrome-latest|2560x1600")
+    # params["browsers"].append("Win8.1|chrome-latest|1920x1080")
+    #params["browsers"].append("Win7x64|ff-latest|1400x1050")
+    #params["browsers"].append("Win7x64|ff-latest|1400x1050")
+    #params["browsers"].append("Mac10.9|chrome-latest")
 
     #other options
     params["browser_list_name"] = "simple-list"
@@ -226,7 +222,3 @@ def listScreenshotBrowsers():
 # listScreenshotBrowsers()
 # runNewTest()
 # viewTestHistory()
-
-
-
-

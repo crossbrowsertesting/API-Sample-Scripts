@@ -11,7 +11,7 @@ $username = ""; //email address for your account
 $password = ""; //authkey for your account
 
 //set parameters we want for the live test
-$params['browser'] = "IE10";
+$params['browser'] = "chrome-latest";
 $params['url'] = 'http://www.google.com';
 $params['api_timeout'] = 100; //number of second to allow test to run
 
