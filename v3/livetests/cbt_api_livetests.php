@@ -100,7 +100,7 @@ class LiveTest{
 
 	function callApi($api_url, $method = 'GET', $params = false)
 	{
-		$apiResult = NULL;
+		$apiResult = new \stdClass();
 
 	    $process = curl_init();
 
